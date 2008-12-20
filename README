@@ -1,0 +1,12 @@
+(((     THE RECURSIVE BENCHMARK     )))
+
+`rake bench`   for a nice CSV-file
+`rake rebench` for a nice fresh CSV-file
+`rake json`    for a nice JSON-file
+`rake flot`    for a nice HTML-file
+`rake build`   for a nice standalone HTML-directory
+`rake publish` for a nice gh-pages branch
+`rake clean`   for a nice clean directory
+
+Have a look in base.rb for the code,
+and see Rakefile for a few settings.
