@@ -11,7 +11,7 @@ TEMPLATE = "misc/rec.template"
 CLEAN << FileList[DATA_DIR, HTML_DIR]
 
 # Benchmark settings:
-MAX = 10_000
+MAX = 100_000
 STEPS = 500
 
 desc "Runs benchmark"
@@ -35,8 +35,7 @@ directory HTML_DIR
 file CSV_FILE => DATA_DIR do
   require 'benchmark'
   require 'enumerator'
-  require 'csv'
-  require 'base'
+  require './base'
 
   @fake = []
   @bm = Benchmark.bmbm(20) do |x|
@@ -58,6 +57,7 @@ file CSV_FILE => DATA_DIR do
        x.report("#{n}|Catch") { catchf.fib(n) }
        x.report("#{n}|Redo") { redof.fib(n) }
        x.report("#{n}|Iterative") { iterative.fib(n) }
+       x.report("#{n}|TCO") { fib(n) } if defined?(fib)
     end 
   end
 
@@ -71,11 +71,9 @@ file CSV_FILE => DATA_DIR do
   end
 
   File.open(CSV_FILE, "w") do |f|
-    CSV::Writer.generate(f) do |csv|
-      csv << ["fib(x)", "Regular", "Rescue", "Catch", "Redo", "Iterative"]
-      @res.sort_by { |k, v| k }.each do |k, v|
-        csv << [k, v[:regular], v[:rescue], v[:catch], v[:redo], v[:iterative]]
-      end
+    f << ["fib(x)", "Regular", "Rescue", "Catch", "Redo", "Iterative", "TCO"] * ',' + $/
+    @res.sort_by { |k, v| k }.each do |k, v|
+      f << [k, v[:regular], v[:rescue], v[:catch], v[:redo], v[:iterative], v[:tco]] * ',' + $/
     end
   end
 end
@@ -88,19 +86,22 @@ file JSON_FILE => CSV_FILE do
   table = {}
   header = nil
 
-  CSV.open(CSV_FILE, "r") do |row|
-    i = row.shift
-    if i == "fib(x)"
-      header = row
-      next
-    end
-    row.zip(header).each do |value, col|
-      value &&= value.to_f
-      data = table[col.downcase] ||= {
-        :label => col,
-        :data => []
-      }
-      data[:data] << [i.to_i, value] unless value.nil?
+  File.open(CSV_FILE, "r") do |f|
+    f.each_line do |line|
+      row = line.chomp.split(",")
+      i = row.shift
+      if i == "fib(x)"
+        header = row
+        next
+      end
+      row.zip(header).each do |value, col|
+        value = value.empty? ? nil : value.to_f
+        data = table[col.downcase] ||= {
+          :label => col,
+          :data => []
+        }
+        data[:data] << [i.to_i, value] unless value.nil?
+      end
     end
   end
 

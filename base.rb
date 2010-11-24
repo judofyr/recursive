@@ -75,3 +75,24 @@ class IterativeFib < Fib
     result
   end
 end
+
+if defined?(RubyVM::InstructionSequence)
+  RubyVM::InstructionSequence.compile_option = {
+    :tailcall_optimization => true,
+    :trace_instruction => false
+  }
+  
+  RubyVM::InstructionSequence.new(<<-EOF).eval
+    def acc(i, n, result)
+      if i == -1
+        result
+      else
+        acc(i - 1, n + result, n)
+      end
+    end
+
+    def fib(i)
+      acc(i, 1, 0)
+    end
+  EOF
+end
