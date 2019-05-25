@@ -24,30 +24,26 @@ class Class
 end
 
 class Fib
-  def acc(i, n, result)
-    if i == -1
-      result
-    else
-      acc(i - 1, n + result, n)
-    end
+  def acc(i, a, b)
+    return b if i == 0
+
+    acc(i - 1, b, a + b)
   end
 
   def fib(i)
-    acc(i, 1, 0)
+    acc(i, 0, 1)
   end
-end  
+end
 
 class RescueFib < Fib
   RunAgain = Class.new(Exception)
   
-  def acc(i, n, result)
-    if i == -1
-      result
-    else
-      raise RunAgain
-    end
+  def acc(i, a, b)
+    return b if i == 0
+    
+    raise RunAgain
   rescue RunAgain
-    i, n, result = i - 1, n + result, n
+    i, a, b = i - 1, b, a + b
     retry
   end
 end
@@ -57,22 +53,21 @@ class CatchFib < Fib
 end
 
 class RedoFib < Fib
-  define_method(:acc) do |i, n, result|
-    if i == -1
-      result
-    else
-      i, n, result = i - 1, n + result, n
-      redo
-    end
+  define_method(:acc) do |i, a, b|
+    return b if i == 0
+
+    i, a, b = i - 1, b, a + b
+    redo
   end
 end
 
 class IterativeFib < Fib
-  def acc(i, n, result)
-    until i == -1
-      i, n, result = i - 1, n + result, n
+  def acc(i, a, b)
+    until i == 0
+      i, a, b = i - 1, b, a + b
     end
-    result
+
+    b
   end
 end
 
@@ -83,16 +78,14 @@ if defined?(RubyVM::InstructionSequence)
   }
   
   RubyVM::InstructionSequence.new(<<-EOF).eval
-    def acc(i, n, result)
-      if i == -1
-        result
-      else
-        acc(i - 1, n + result, n)
-      end
+    def acc(i, a, b)
+      return b if i == 0
+
+      acc(i - 1, b, a + b)
     end
 
     def fib(i)
-      acc(i, 1, 0)
+      acc(i, 0, 1)
     end
   EOF
 end
